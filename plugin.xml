@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
   xmlns:android="http://schemas.android.com/apk/res/android"
-  id="@havesource/cordova-plugin-push" version="4.0.0-dev.0">
+  id="@havesource/cordova-plugin-push" version="2.0.1-dev.0">
 
   <name>Cordova Push Plugin</name>
   <description>Enable receiving push notifications on Android, iOS and Windows devices. Android uses Firebase Cloud Messaging. iOS uses Apple APNS Notifications. Windows uses Microsoft WNS Notifications.</description>
@@ -14,13 +14,11 @@
 
   <engines>
     <engine name="cordova" version=">=10.0.0"/>
-    <engine name="cordova-android" version=">=9.0.0"/>
+    <engine name="cordova-android" version=">=8.0.0"/>
     <engine name="cordova-ios" version=">=6.0.0"/>
   </engines>
 
   <platform name="android">
-    <hook type="before_compile" src="hooks/android/beforeCompile.js"/>
-
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="PushNotification">
         <param name="android-package" value="com.adobe.phonegap.push.PushPlugin"/>
@@ -32,8 +30,6 @@
       <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
       <uses-permission android:name="android.permission.WAKE_LOCK"/>
       <uses-permission android:name="android.permission.VIBRATE"/>
-      <uses-permission android:name="${applicationId}.permission.PushHandlerActivity"/>
-      <permission android:name="${applicationId}.permission.PushHandlerActivity" android:protectionLevel="signature"></permission>
     </config-file>
 
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
@@ -48,36 +44,39 @@
       <receiver android:name="com.adobe.phonegap.push.BackgroundActionButtonHandler"/>
       <receiver android:name="com.adobe.phonegap.push.PushDismissedHandler"/>
 
-      <service android:name="com.adobe.phonegap.push.FCMService" android:exported="true">
+      <service android:name="com.adobe.phonegap.push.FCMService">
         <intent-filter>
           <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+        </intent-filter>
+      </service>
+
+      <service android:name="com.adobe.phonegap.push.PushInstanceIDListenerService">
+        <intent-filter>
+          <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
         </intent-filter>
       </service>
     </config-file>
 
     <config-file target="config.xml" parent="/*">
-      <preference name="AndroidXEnabled" value="true" />
       <preference name="GradlePluginGoogleServicesEnabled" value="true" />
-      <preference name="GradlePluginGoogleServicesVersion" value="4.3.8" />
-
-      <preference name="GradlePluginKotlinEnabled" value="true" />
-      <preference name="GradlePluginKotlinVersion" value="1.5.20" />
+      <preference name="GradlePluginGoogleServicesVersion" value="4.2.0" />
     </config-file>
 
-    <preference name="ANDROIDX_CORE_VERSION" default="1.6.+"/>
-    <preference name="FCM_VERSION" default="23.+"/>
+    <preference name="ANDROID_SUPPORT_V13_VERSION" default="28.0.0"/>
+    <preference name="FCM_VERSION" default="21.1.0"/>
 
-    <framework src="androidx.core:core:$ANDROIDX_CORE_VERSION" />
-    <framework src="me.leolin:ShortcutBadger:1.1.22@aar"/>
+    <framework src="com.android.support:support-v13:$ANDROID_SUPPORT_V13_VERSION"/>
+    <framework src="me.leolin:ShortcutBadger:1.1.17@aar"/>
     <framework src="com.google.firebase:firebase-messaging:$FCM_VERSION"/>
 
-    <source-file src="src/android/com/adobe/phonegap/push/FCMService.kt" target-dir="java/com/adobe/phonegap/push/"/>
-    <source-file src="src/android/com/adobe/phonegap/push/PushConstants.kt" target-dir="java/com/adobe/phonegap/push/"/>
-    <source-file src="src/android/com/adobe/phonegap/push/PushHandlerActivity.kt" target-dir="java/com/adobe/phonegap/push/"/>
-    <source-file src="src/android/com/adobe/phonegap/push/BackgroundHandlerActivity.kt" target-dir="java/com/adobe/phonegap/push/"/>
-    <source-file src="src/android/com/adobe/phonegap/push/PushPlugin.kt" target-dir="java/com/adobe/phonegap/push/"/>
-    <source-file src="src/android/com/adobe/phonegap/push/BackgroundActionButtonHandler.kt" target-dir="java/com/adobe/phonegap/push/"/>
-    <source-file src="src/android/com/adobe/phonegap/push/PushDismissedHandler.kt" target-dir="java/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/FCMService.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/PushConstants.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/PushHandlerActivity.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/BackgroundHandlerActivity.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/PushInstanceIDListenerService.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/PushPlugin.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/BackgroundActionButtonHandler.java" target-dir="src/com/adobe/phonegap/push/"/>
+    <source-file src="src/android/com/adobe/phonegap/push/PushDismissedHandler.java" target-dir="src/com/adobe/phonegap/push/"/>
   </platform>
 
   <platform name="browser">
@@ -92,7 +91,6 @@
   </platform>
 
   <platform name="ios">
-    <preference name="IOS_FIREBASE_MESSAGING_VERSION" default="~> 8.1.1"/>
 
     <config-file target="config.xml" parent="/*">
       <feature name="PushNotification">
@@ -118,17 +116,8 @@
     <source-file src="src/ios/PushPlugin.m"/>
     <header-file src="src/ios/AppDelegate+notification.h"/>
     <header-file src="src/ios/PushPlugin.h"/>
-
     <framework src="PushKit.framework"/>
 
-    <podspec>
-      <config>
-        <source url="https://cdn.cocoapods.org/"/>
-      </config>
-      <pods use-frameworks="true">
-        <pod name="Firebase/Messaging" spec="$IOS_FIREBASE_MESSAGING_VERSION" />
-      </pods>
-    </podspec>
   </platform>
 
   <platform name="windows">
